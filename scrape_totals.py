@@ -1,58 +1,54 @@
-import time
-import json
 import requests
 from bs4 import BeautifulSoup
+import json
+import time
 
+# Campaign URLs
 URLS = [
     "https://fundraise.givesmart.com/public/campaigns/164386/graph?no_polling=false",
     "https://fundraise.givesmart.com/public/campaigns/168058/graph?no_polling=false",
     "https://fundraise.givesmart.com/public/campaigns/168174/graph?no_polling=false"
 ]
 
-GOAL = 100_000_000_000  # 100B
+# Goal for the combined thermometer
+GOAL = 100_000_000_000
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
+# Output JSON file
+OUTPUT_FILE = "totals.json"
 
-def parse_money(text):
-    return int(text.replace("$", "").replace(",", "").strip())
+# Update interval in seconds
+UPDATE_INTERVAL = 20
 
-def scrape_once():
-    total = 0
-
-    for url in URLS:
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=15)
-            soup = BeautifulSoup(r.text, "html.parser")
-
-            raised = soup.select_one(
-                ".fundraising-total-raised .fundraisingAmount"
-            )
-
-            if raised:
-                total += parse_money(raised.text)
-
-        except Exception as e:
-            print(f"Error scraping {url}: {e}")
-
-    percent = round((total / GOAL) * 100, 4)
-
-    data = {
-        "goal": GOAL,
-        "total": total,
-        "percent": percent
-    }
-
-    with open("totals.json", "w") as f:
-        json.dump(data, f)
-
-    print("Updated totals:", data)
+def scrape_total(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        total_div = soup.find("div", class_="fundraising-total-raised")
+        if total_div:
+            amount_text = total_div.find("div", class_="fundraisingAmount").get_text(strip=True)
+            # Remove $ and commas
+            amount = float(amount_text.replace("$","").replace(",",""))
+            return amount
+    except Exception as e:
+        print(f"Error scraping {url}: {e}")
+    return 0
 
 def run():
     while True:
-        scrape_once()
-        time.sleep(20)
+        total = sum(scrape_total(url) for url in URLS)
+        percent = (total / GOAL) * 100 if GOAL else 0
+        data = {
+            "goal": GOAL,
+            "total": total,
+            "percent": round(percent, 2)
+        }
+        try:
+            with open(OUTPUT_FILE, "w") as f:
+                json.dump(data, f)
+        except Exception as e:
+            print(f"Error writing {OUTPUT_FILE}: {e}")
+        time.sleep(UPDATE_INTERVAL)
 
 if __name__ == "__main__":
     run()
