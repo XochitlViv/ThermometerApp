@@ -17,14 +17,25 @@
     </div>
 
 <script>
+const GOAL = 100000000000; // adjust to your real goal
+
 async function updateThermometer() {
     try {
         const res = await fetch("/totals");
         const data = await res.json();
+
+        // Sum all campaign totals
+        let totalRaised = 0;
+        for (let key in data) {
+            totalRaised += data[key];
+        }
+
+        const percent = Math.min((totalRaised / GOAL) * 100, 100);
+
         const mercury = document.getElementById("mercury");
-        const percent = Math.min(data.percent, 100);
         mercury.style.height = percent + "%";
-        document.getElementById("totalRaised").innerText = `$${data.total.toLocaleString()} of $${data.goal.toLocaleString()}`;
+
+        document.getElementById("totalRaised").innerText = `$${totalRaised.toLocaleString()} of $${GOAL.toLocaleString()}`;
         document.getElementById("percent").innerText = `${percent.toFixed(2)}%`;
     } catch (e) {
         console.error(e);
