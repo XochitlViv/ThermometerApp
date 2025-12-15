@@ -6,7 +6,6 @@ import requests
 # ----------------------------
 API_KEY = os.environ.get("GIVESMART_API_KEY")
 CAMPAIGN_IDS = ["164386", "168058", "168174"]
-
 API_BASE_URL = "https://fundraise.givesmart.com/api/v2/campaigns/"
 GRAPH_BASE_URL = "https://fundraise.givesmart.com/public/campaigns/{}/graph?no_polling=false"
 
@@ -16,7 +15,7 @@ GRAPH_BASE_URL = "https://fundraise.givesmart.com/public/campaigns/{}/graph?no_p
 def get_total_from_api(campaign_id):
     """Try to get campaign total from GiveSmart API"""
     if not API_KEY:
-        print("API_KEY not set!")
+        print("API_KEY not set! Skipping API call.")
         return None
 
     url = f"{API_BASE_URL}{campaign_id}"
@@ -27,6 +26,8 @@ def get_total_from_api(campaign_id):
             data = response.json()
             # Adjust based on actual API response
             return data.get("total_amount") or data.get("totals", {}).get("raised", 0)
+        elif response.status_code == 403:
+            print(f"API access forbidden for campaign {campaign_id}. Skipping.")
         else:
             print(f"API failed for {campaign_id}: {response.status_code}")
     except Exception as e:
@@ -42,6 +43,8 @@ def get_total_from_graph(campaign_id):
         if response.status_code == 200:
             data = response.json()
             return data.get("total_amount") or data.get("totals", {}).get("raised", 0)
+        elif response.status_code == 403:
+            print(f"Graph scraping forbidden for campaign {campaign_id}. Skipping.")
         else:
             print(f"Graph scraping failed for {campaign_id}: {response.status_code}")
     except Exception as e:
@@ -52,12 +55,11 @@ def get_total_from_graph(campaign_id):
 # Main function for app.py
 # ----------------------------
 def run():
-    """Return a dictionary of totals for all campaigns"""
+    """Return a dictionary of totals for all accessible campaigns"""
     totals = {}
     for cid in CAMPAIGN_IDS:
         total = get_total_from_api(cid)
         if total is None:
-            print(f"Falling back to scraping for campaign {cid}")
             total = get_total_from_graph(cid)
         totals[cid] = total
     return totals
@@ -66,4 +68,5 @@ def run():
 # Test run
 # ----------------------------
 if __name__ == "__main__":
-    print(run())
+    result = run()
+    print("Accessible campaign totals:", result)
