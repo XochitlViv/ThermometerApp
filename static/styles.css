@@ -3,6 +3,7 @@ body {
     text-align: center;
     margin-top: 50px;
     background: #f9f9f9;
+    color: #333;
 }
 
 .thermometer-container {
@@ -21,30 +22,4 @@ body {
     box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
 }
 
-.mercury {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background: linear-gradient(to top, #ff4d4d, #ff9999);
-    border-radius: 10px 10px 0 0;
-    height: 0%;
-    transition: height 1s ease-in-out;
-}
-
-.bulb {
-    position: absolute;
-    bottom: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 40px;
-    background: radial-gradient(circle at 30% 30%, #ff6666, #cc0000);
-    border-radius: 50%;
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-}
-
-.totals {
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: bold;
-}
+.merc
