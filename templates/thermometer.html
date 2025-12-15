@@ -1,37 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>100B Meals Thermometer</title>
-  <link rel="stylesheet" href="/static/styles.css">
+    <title>100B Meals Thermometer</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-
-<div class="container">
-  <div class="thermometer">
-    <div class="mercury" id="mercury"></div>
-    <div class="bulb"></div>
-  </div>
-
-  <div class="totals" id="totalsText">
-    Loading totals…
-  </div>
-</div>
+    <div class="thermometer-container">
+        <div class="thermometer">
+            <div class="mercury" id="mercury"></div>
+            <div class="bulb"></div>
+        </div>
+        <div class="totals">
+            <div id="totalRaised"></div>
+            <div id="percent"></div>
+        </div>
+    </div>
 
 <script>
 async function updateThermometer() {
-  const res = await fetch("/totals");
-  const data = await res.json();
-
-  const percent = Math.min(data.percent, 100);
-  document.getElementById("mercury").style.height = percent + "%";
-
-  document.getElementById("totalsText").innerText =
-    `$${data.total.toLocaleString()} raised of $${data.goal.toLocaleString()} (${percent.toFixed(2)}%)`;
+    try {
+        const res = await fetch("/totals");
+        const data = await res.json();
+        const mercury = document.getElementById("mercury");
+        const percent = Math.min(data.percent, 100);
+        mercury.style.height = percent + "%";
+        document.getElementById("totalRaised").innerText = `$${data.total.toLocaleString()} of $${data.goal.toLocaleString()}`;
+        document.getElementById("percent").innerText = `${percent.toFixed(2)}%`;
+    } catch (e) {
+        console.error(e);
+    }
 }
 
+// Initial load and repeat every 20s
 updateThermometer();
 setInterval(updateThermometer, 20000);
 </script>
-
 </body>
 </html>
