@@ -2,23 +2,17 @@ from flask import Flask, render_template, jsonify
 import threading
 import json
 import os
-from scrape_totals import run
+from scrape_totals import run as scrape_run
 
 app = Flask(__name__)
 
-# Start the scraper in a background thread
-def start_scraper():
-    t = threading.Thread(target=run, daemon=True)
-    t.start()
+# Start scraper in a background thread
+threading.Thread(target=scrape_run, daemon=True).start()
 
-start_scraper()
-
-# Serve the main thermometer page
 @app.route("/")
 def index():
     return render_template("thermometer.html")
 
-# Serve the totals JSON
 @app.route("/totals")
 def totals():
     if not os.path.exists("totals.json"):
@@ -27,6 +21,6 @@ def totals():
         return jsonify(json.load(f))
 
 if __name__ == "__main__":
-    # Railway sets PORT automatically; fallback to 8000 locally
+    # For Railway: port is assigned via environment
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
